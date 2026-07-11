@@ -1,5 +1,5 @@
 P(row > col),Chile,Australia,Indonesia,DR Congo
-Chile,—,0.783,0.809,0.951
-Australia,0.217,—,0.411,0.899
-Indonesia,0.191,0.589,—,0.900
-DR Congo,0.050,0.101,0.100,—
+Chile,—,0.885,0.903,0.985
+Australia,0.115,—,0.534,0.810
+Indonesia,0.097,0.466,—,0.778
+DR Congo,0.015,0.190,0.222,—

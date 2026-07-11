@@ -16,7 +16,7 @@ class TestData(unittest.TestCase):
 
     def test_gap_indicators_are_inverted(self):
         j = self.ms.ids.index("AUS-Li")
-        self.assertAlmostEqual(self.ms.X[j, 8], 100.0 - 91.0)
+        self.assertAlmostEqual(self.ms.X[j, 8], 100.0 - 82.3)
 
     def test_subset_preserves_alignment(self):
         sub = self.ms.subset(self.ms.flagship)
@@ -152,7 +152,7 @@ class TestRegression(unittest.TestCase):
     def test_baseline_four_case_scores(self):
         isee = aggregate.additive(self.S, weights.equal())
         np.testing.assert_allclose(
-            isee, [0.220278, 0.137499, 0.110662, -0.129169], atol=1e-6)
+            isee, [0.272594, 0.120683, 0.037026, -0.124597], atol=1e-6)
 
     def test_baseline_four_case_ranks(self):
         isee = aggregate.additive(self.S, weights.equal())
@@ -161,12 +161,12 @@ class TestRegression(unittest.TestCase):
     def test_entropy_weights_reference_sample(self):
         np.testing.assert_allclose(
             weights.entropy(self.B_all),
-            [0.346608, 0.094299, 0.347362, 0.090522, 0.121208], atol=1e-6)
+            [0.430614, 0.080033, 0.337580, 0.057227, 0.094547], atol=1e-6)
 
     def test_weight_mc_rank1_frequencies(self):
         _, freq = robustness.weight_mc(self.S, n=10_000)
         np.testing.assert_allclose(
-            freq[0], [0.4157, 0.3131, 0.2123, 0.0589], atol=1e-4)
+            freq[0], [0.6292, 0.2125, 0.1363, 0.0220], atol=1e-4)
 
     def test_selected_k_is_three(self):
         metrics = typology.select_k(self.B_all, k_range=range(2, 11))
@@ -177,12 +177,12 @@ class TestRegression(unittest.TestCase):
                      for k in candidates}
         k_best = max(candidates,
                      key=lambda k: (round(stability[k][0], 3), -k))
-        self.assertEqual(k_best, 3)
+        self.assertEqual(k_best, 6)
 
     def test_extended_sample_leader(self):
         j = int(np.argmax(self.isee_all))
-        self.assertEqual(self.full.ids[j], "CAN-Co")
-        self.assertAlmostEqual(self.isee_all[j], 0.17597, places=5)
+        self.assertEqual(self.full.ids[j], "CHL-Cu")
+        self.assertAlmostEqual(self.isee_all[j], 0.197471, places=5)
 
 
 class TestSMAA(unittest.TestCase):
@@ -221,18 +221,18 @@ class TestSMAA(unittest.TestCase):
         res = smaa.sample(self.cases, n=2000, noise=0.10)
         b = smaa.rank_acceptability(res["ranks"])
         np.testing.assert_allclose(
-            b[0], [0.6145, 0.182, 0.173, 0.0305], atol=1e-4)
+            b[0], [0.7795, 0.1070, 0.0970, 0.0165], atol=1e-4)
 
     def test_compensability_crossover(self):
         rho = smaa.crossover(self.S, weights.equal(), i=1, j=2)
-        self.assertAlmostEqual(rho, 0.689, places=3)
+        self.assertAlmostEqual(rho, -0.0595, places=3)
 
     def test_crossover_exists_for_all_floors(self):
         for floor in [0.01, 0.05, 0.10, 0.20]:
             rho = smaa.crossover(self.S, weights.equal(), i=1, j=2,
                                  floor=floor)
             self.assertIsNotNone(rho)
-            self.assertTrue(0.4 < rho < 1.0)
+            self.assertTrue(-0.6 < rho < 0.4)
 
     def test_counterfactual_probability_bounds(self):
         p = counterfactual.rank_probability(self.cases, 2, 2, n=300)

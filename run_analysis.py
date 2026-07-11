@@ -190,7 +190,7 @@ figures.compensability(rho_grid, pm_scores, names,
 figures.acceptability(b, [s.replace(chr(10), " ") for s in short],
                       os.path.join(FIG, "fig5_acceptability.png"))
 
-print("  counterfactual scenarios (IDN-Ni, P(rank<=2)>=0.75):")
+print("  counterfactual scenarios (IDN-Ni, P(rank<=2)>=0.60):")
 cf_rows = []
 for scen, costs in [("equal cost", {"grid_co2": 1.0, "rule_of_law_gap": 1.0}),
                     ("carbon-expensive", {"grid_co2": 2.0,
@@ -199,7 +199,7 @@ for scen, costs in [("equal cost", {"grid_co2": 1.0, "rule_of_law_gap": 1.0}),
                                               "rule_of_law_gap": 2.0})]:
     cf = counterfactual.scenario_search(
         cases, system_idx=2, levers=["grid_co2", "rule_of_law_gap"],
-        target_rank=2, probability=0.75, costs=costs)
+        target_rank=2, probability=0.60, costs=costs)
     ch = cf["changes"]
     cf_rows.append([scen,
                     f"-{ch['grid_co2']:.0%}" if ch else "n/a",

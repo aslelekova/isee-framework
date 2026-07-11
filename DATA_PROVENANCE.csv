@@ -1,11 +1,11 @@
-column,indicator,primary_source,url,vintage,notes
-prod_value_usd_bn,FV1: value of mine production,USGS Mineral Commodity Summaries 2024 (production) x average 2023 world price,https://doi.org/10.3133/mcs2024,2023,"prices: Cu 8490 USD/t; Ni 21500 USD/t; Co 33000 USD/t; Li: LCE 35000 USD/t with Li->LCE factor 5.32; see CODEBOOK.md"
-gdp_usd_bn,denominator of FV2,World Bank WDI NY.GDP.MKTP.CD,https://databank.worldbank.org/source/world-development-indicators,2023,"Cuba: latest available year"
-regulatory_quality_pct,MF1,Worldwide Governance Indicators (percentile rank),https://www.worldbank.org/en/publication/worldwide-governance-indicators,2022,
-gov_effectiveness_pct,MF2,Worldwide Governance Indicators (percentile rank),https://www.worldbank.org/en/publication/worldwide-governance-indicators,2022,
-mine_share_pct,denominator of SV2,USGS Mineral Commodity Summaries 2024,https://doi.org/10.3133/mcs2024,2023,"share of global mine production"
-refining_share_pct,SV1 and numerator of SV2,IEA Global Critical Minerals Outlook 2024,https://www.iea.org/reports/global-critical-minerals-outlook-2024,2023,
-grid_co2_g_kwh,EX1,Ember Global Electricity Review,https://ember-climate.org,2023,
-water_stress_pct,EX2,World Bank WDI ER.H2O.FWST.ZS (SDG 6.4.2),https://databank.worldbank.org/source/world-development-indicators,2021-2022,
-rule_of_law_pct,LL1 = 100 - value,Worldwide Governance Indicators (percentile rank),https://www.worldbank.org/en/publication/worldwide-governance-indicators,2022,
-epi_score,LL2 = 100 - value,Yale Environmental Performance Index,https://epi.yale.edu,2022,
+column,indicator,primary_source,url,vintage,accessed,notes
+prod_value_usd_bn,FV1: value of mine production,USGS Mineral Commodity Summaries 2026 (production) x average 2025 world price,https://doi.org/10.3133/mcs2026,2025,2026-07-12,"prices (LME 2025 annual averages per USGS MCS 2026): Cu 9700 USD/t; Ni 15000 USD/t; Co 33000 USD/t; Li: battery-grade lithium carbonate 9000 USD/t with Li->LCE factor 5.323; see CODEBOOK.md"
+gdp_usd_bn,denominator of FV2,World Bank WDI NY.GDP.MKTP.CD (API),https://api.worldbank.org/v2/country/{iso3}/indicator/NY.GDP.MKTP.CD,2025 (Cuba: 2020 latest available),2026-07-12,
+regulatory_quality_score,MF1,Worldwide Governance Indicators 2025 Revision (anchored 0-100 governance score),https://www.worldbank.org/en/publication/worldwide-governance-indicators,2024,2026-07-12,"2025 WGI revision replaced percentile ranks with 0-100 scores"
+gov_effectiveness_score,MF2,Worldwide Governance Indicators 2025 Revision (anchored 0-100 governance score),https://www.worldbank.org/en/publication/worldwide-governance-indicators,2024,2026-07-12,
+mine_share_pct,denominator of SV2,USGS Mineral Commodity Summaries 2026,https://doi.org/10.3133/mcs2026,2025,2026-07-12,"share of global mine production 2025 (estimates); lithium world total excludes withheld US production"
+refining_share_pct,SV1 and numerator of SV2,"copper: USGS MCS 2026 refinery production; nickel: UNCTAD Global Trade Update June 2026 (Indonesia 43%); lithium/cobalt/minor systems: IEA Global Critical Minerals Outlook estimates","https://doi.org/10.3133/mcs2026; https://unctad.org/publication/global-trade-update-june-2026-shifting-dynamics-critical-minerals-trade; https://www.iea.org/reports/global-critical-minerals-outlook-2025",2024-2025,2026-07-12,"copper shares computed from USGS refinery production; non-copper minor-system shares are approximate IEA-based estimates"
+grid_co2_g_kwh,EX1,Ember yearly electricity data (2026 bulk release),https://ember-energy.org/data/yearly-electricity-data/,2024-2025 (latest per country),2026-07-12,
+water_stress_pct,EX2,World Bank WDI ER.H2O.FWST.ZS (SDG 6.4.2; API),https://api.worldbank.org/v2/country/{iso3}/indicator/ER.H2O.FWST.ZS,2022,2026-07-12,
+rule_of_law_score,LL1 = 100 - value,Worldwide Governance Indicators 2025 Revision (anchored 0-100 governance score),https://www.worldbank.org/en/publication/worldwide-governance-indicators,2024,2026-07-12,
+epi_score,LL2 = 100 - value,Yale Environmental Performance Index 2026 (epi2026results2026-07-07.xlsx),https://epi.yale.edu/downloads,2026 edition (data through 2024),2026-07-12,"Cuba absent from EPI 2026: value left missing; LL for Cuba computed from rule-of-law gap only"

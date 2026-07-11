@@ -1,11 +1,11 @@
 dropped_indicator,Chile,Australia,Indonesia,DR Congo,max_rank_shift
-FV1: Value of mine production (USD bn),+0.220 (1),+0.109 (2),+0.037 (3),-0.065 (4),0
-FV2: Focal-mineral production value (% of GDP),+0.220 (1),+0.166 (3),+0.184 (2),-0.193 (4),1
-MF1: Regulatory quality (percentile),+0.218 (1),+0.137 (2),+0.121 (3),-0.129 (4),0
-MF2: Government effectiveness (percentile),+0.223 (1),+0.137 (2),+0.100 (3),-0.129 (4),0
-SV1: Share of global refining (%),+0.247 (1),+0.139 (2),+0.111 (3),-0.129 (4),0
-SV2: Downstream capture ratio (refining/mining share),+0.193 (1),+0.136 (2),+0.111 (3),-0.129 (4),0
-EX1: Grid carbon intensity (gCO2/kWh),+0.167 (2),+0.200 (1),+0.143 (3),-0.129 (4),1
-EX2: Water stress (% withdrawal),+0.274 (1),+0.075 (3),+0.078 (2),-0.129 (4),1
-LL1: Rule-of-law gap (100 - percentile),+0.191 (1),+0.137 (2),+0.066 (3),-0.122 (4),0
-LL2: Environmental performance gap (100 - EPI),+0.250 (1),+0.137 (3),+0.155 (2),-0.136 (4),1
+FV1: Value of mine production (USD bn),+0.273 (1),+0.121 (2),-0.019 (3),-0.074 (4),0
+FV2: Focal-mineral production value (% of GDP),+0.273 (1),+0.121 (2),+0.093 (3),-0.175 (4),0
+"MF1: Regulatory quality (WGI score, 0-100)",+0.280 (1),+0.121 (2),+0.044 (3),-0.125 (4),0
+"MF2: Government effectiveness (WGI score, 0-100)",+0.265 (1),+0.121 (2),+0.030 (3),-0.125 (4),0
+SV1: Share of global refining (%),+0.300 (1),+0.128 (2),+0.037 (3),-0.125 (4),0
+SV2: Downstream capture ratio (refining/mining share),+0.245 (1),+0.114 (2),+0.037 (3),-0.125 (4),0
+EX1: Grid carbon intensity (gCO2/kWh),+0.283 (1),+0.182 (2),+0.037 (3),-0.125 (4),0
+EX2: Water stress (% withdrawal),+0.262 (1),+0.060 (2),+0.037 (3),-0.125 (4),0
+LL1: Rule-of-law gap (100 - WGI score),+0.272 (1),+0.121 (2),-0.009 (3),-0.113 (4),0
+LL2: Environmental performance gap (100 - EPI),+0.273 (1),+0.121 (2),+0.083 (3),-0.136 (4),0

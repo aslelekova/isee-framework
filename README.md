@@ -28,7 +28,7 @@ isee_framework/
 │   └── figures.py              # publication figures
 ├── run_analysis.py             # reproduces all tables and figures of Section 5
 ├── tests/
-│   └── test_isee.py            # 30 unit and regression tests
+│   └── test_isee.py            # 33 unit and regression tests
 ├── CODEBOOK.md                 # indicator definitions and formulas
 ├── DATA_PROVENANCE.csv         # source, URL, and vintage of every column
 └── requirements.txt            # pinned dependency versions
