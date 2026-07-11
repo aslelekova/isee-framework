@@ -77,7 +77,7 @@ save_csv("table4_mc_rank_frequencies.csv",
          [[r + 1] + [f"{mc_freq[r, j]:.3f}" for j in range(4)]
           for r in range(4)])
 
-dmc_scores, dmc_freq = robustness.data_mc(cases.X, w_eq, n=5_000, noise=0.10)
+dmc_scores, dmc_freq = robustness.data_mc(cases, w_eq, n=5_000, noise=0.10)
 save_csv("table5_data_noise_rank_frequencies.csv",
          ["rank"] + names,
          [[r + 1] + [f"{dmc_freq[r, j]:.3f}" for j in range(4)]
@@ -108,20 +108,24 @@ print("  data-noise rank-1 frequencies:",
 
 print("== Part 2: compensability and SMAA rank acceptability")
 rho_grid, pm_scores, pm_ranks = smaa.compensability_sweep(S, w_eq)
-flips = [(round(rho_grid[i], 2), pm_ranks[i - 1].tolist(), pm_ranks[i].tolist())
-         for i in range(1, len(rho_grid))
-         if not np.array_equal(pm_ranks[i], pm_ranks[i - 1])]
-print("  rank flips along rho:", flips)
 save_csv("compensability_sweep.csv",
          ["rho"] + [f"score_{n}" for n in names] + [f"rank_{n}" for n in names],
          [[f"{rho_grid[i]:.2f}"] + [f"{pm_scores[i, j]:.4f}" for j in range(4)]
           + [pm_ranks[i, j] for j in range(4)] for i in range(len(rho_grid))])
 
-res = smaa.sample(cases.X, n=20_000, noise=0.10,
-                  upper=data.INDICATOR_UPPER)
+floors = [0.01, 0.05, 0.10, 0.20]
+crossovers = {f: smaa.crossover(S, w_eq, i=1, j=2, floor=f) for f in floors}
+save_csv("compensability_floor_sensitivity.csv",
+         ["floor", "crossover_rho_AUS_IDN"],
+         [[f, f"{r:.3f}" if r is not None else "none"]
+          for f, r in crossovers.items()])
+print("  AUS-IDN crossover rho by floor:",
+      {f: round(r, 3) if r else None for f, r in crossovers.items()})
+
+res = smaa.sample(cases, n=20_000, noise=0.10)
 b = smaa.rank_acceptability(res["ranks"])
 P = smaa.pairwise_probability(res["scores"])
-cw = smaa.central_weights(res, rank=1)
+prof = smaa.central_profile(res, rank=1)
 erank = smaa.expected_rank(b)
 entro = smaa.rank_entropy(b)
 
@@ -132,34 +136,81 @@ save_csv("smaa_pairwise.csv",
          ["P(row > col)"] + names,
          [[names[i]] + [f"{P[i, j]:.3f}" if i != j else "—" for j in range(4)]
           for i in range(4)])
-save_csv("smaa_central_weights.csv",
-         ["system"] + data.DIMENSIONS + ["expected_rank", "rank_entropy"],
-         [[names[j]] + [f"{cw[j, i]:.3f}" for i in range(5)]
-          + [f"{erank[j]:.2f}", f"{entro[j]:.3f}"] for j in range(4)])
+save_csv("smaa_central_profiles.csv",
+         ["system", "n_rank1"] + [f"w_{d}_mean" for d in data.DIMENSIONS]
+         + [f"w_{d}_10_90" for d in data.DIMENSIONS]
+         + ["rho_mean", "rho_median", "rho_10_90", "expected_rank",
+            "rank_entropy"],
+         [[names[j], prof[j]["n"]]
+          + [f"{prof[j]['w_mean'][i]:.3f}" for i in range(5)]
+          + [f"[{prof[j]['w_lo'][i]:.2f}, {prof[j]['w_hi'][i]:.2f}]"
+             for i in range(5)]
+          + [f"{prof[j]['rho_mean']:.2f}", f"{prof[j]['rho_median']:.2f}",
+             f"[{prof[j]['rho_lo']:.2f}, {prof[j]['rho_hi']:.2f}]",
+             f"{erank[j]:.2f}", f"{entro[j]:.3f}"]
+          for j in range(4) if prof[j] is not None])
 print("  acceptability rank1:", {names[j]: f"{b[0, j]:.1%}" for j in range(4)})
 print("  expected ranks:", {names[j]: round(erank[j], 2) for j in range(4)})
 print("  P(Chile>Australia) =", f"{P[0, 1]:.3f}",
       " P(Australia>Indonesia) =", f"{P[1, 2]:.3f}",
-      " P(Indonesia>DRC) =", f"{P[2, 3]:.3f}")
-print("  central weights (rank 1):")
+      " P(Indonesia>DRC) =", f"{P[2, 3]:.3f}",
+      " P(Chile>DRC) =", f"{P[0, 3]:.3f}")
 for j in range(4):
-    print(f"    {names[j]}: {np.round(cw[j], 3)}")
+    if prof[j]:
+        print(f"    {names[j]}: w_mean={np.round(prof[j]['w_mean'], 3)} "
+              f"rho_mean={prof[j]['rho_mean']:.2f} "
+              f"rho_10_90=[{prof[j]['rho_lo']:.2f}, {prof[j]['rho_hi']:.2f}]")
+
+print("  prior sensitivity:")
+prior_rows = []
+for label, kw in [
+    ("alpha=0.5, noise 10%", dict(alpha=0.5, noise=0.10)),
+    ("alpha=1, noise 10% (baseline)", dict(alpha=1.0, noise=0.10)),
+    ("alpha=2, noise 10%", dict(alpha=2.0, noise=0.10)),
+    ("alpha=5, noise 10%", dict(alpha=5.0, noise=0.10)),
+    ("alpha=1, noise 5%", dict(alpha=1.0, noise=0.05)),
+    ("alpha=1, noise 20%", dict(alpha=1.0, noise=0.20)),
+    ("alpha=1, rho U(-1,1)", dict(alpha=1.0, noise=0.10,
+                                  rho_range=(-1.0, 1.0))),
+    ("alpha=1, rho U(0,2)", dict(alpha=1.0, noise=0.10,
+                                 rho_range=(0.0, 2.0))),
+]:
+    r = smaa.sample(cases, n=10_000, **kw)
+    bb = smaa.rank_acceptability(r["ranks"])
+    prior_rows.append([label, f"{bb[0, 0]:.3f}",
+                       f"{bb[0, 0] + bb[1, 0]:.3f}", f"{bb[3, 3]:.3f}"])
+    print(f"    {label}: Chile rank1 {bb[0, 0]:.1%}, Chile top2 "
+          f"{bb[0, 0] + bb[1, 0]:.1%}, DRC rank4 {bb[3, 3]:.1%}")
+save_csv("smaa_prior_sensitivity.csv",
+         ["specification", "Chile_rank1", "Chile_top2", "DRC_rank4"],
+         prior_rows)
 
 figures.compensability(rho_grid, pm_scores, names,
                        os.path.join(FIG, "fig4_compensability.png"))
 figures.acceptability(b, [s.replace(chr(10), " ") for s in short],
                       os.path.join(FIG, "fig5_acceptability.png"))
 
-cf = counterfactual.search(cases.X, system_idx=2, mutable=[6, 8],
-                           directions=[-1, -1], target_rank=2,
-                           probability=0.75)
-print("  counterfactual IDN-Ni -> P(rank<=2)>=0.75:", cf)
-save_csv("counterfactual_idn.csv",
-         ["parameter", "value"],
-         [["baseline_P(rank<=2)", f"{cf['baseline_probability']:.3f}"],
-          ["grid_co2_change", f"-{cf['changes'][6]:.0%}" if cf["changes"] else "n/a"],
-          ["rule_of_law_gap_change", f"-{cf['changes'][8]:.0%}" if cf["changes"] else "n/a"],
-          ["achieved_P(rank<=2)", f"{cf['probability']:.3f}" if cf["probability"] else "n/a"]])
+print("  counterfactual scenarios (IDN-Ni, P(rank<=2)>=0.75):")
+cf_rows = []
+for scen, costs in [("equal cost", {"grid_co2": 1.0, "rule_of_law_gap": 1.0}),
+                    ("carbon-expensive", {"grid_co2": 2.0,
+                                          "rule_of_law_gap": 1.0}),
+                    ("governance-expensive", {"grid_co2": 1.0,
+                                              "rule_of_law_gap": 2.0})]:
+    cf = counterfactual.scenario_search(
+        cases, system_idx=2, levers=["grid_co2", "rule_of_law_gap"],
+        target_rank=2, probability=0.75, costs=costs)
+    ch = cf["changes"]
+    cf_rows.append([scen,
+                    f"-{ch['grid_co2']:.0%}" if ch else "n/a",
+                    f"-{ch['rule_of_law_gap']:.0%}" if ch else "n/a",
+                    f"{cf['baseline_probability']:.3f}",
+                    f"{cf['probability']:.3f}" if cf["probability"] else "n/a"])
+    print(f"    {scen}: {cf_rows[-1]}")
+save_csv("counterfactual_scenarios_idn.csv",
+         ["scenario", "grid_co2_change", "rule_of_law_gap_change",
+          "baseline_P", "achieved_P"],
+         cf_rows)
 
 print("== Part 3: typology of 30 country-mineral systems")
 isee_all = aggregate.additive(S_all, w_eq)

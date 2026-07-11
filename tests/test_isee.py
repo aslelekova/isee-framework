@@ -22,6 +22,23 @@ class TestData(unittest.TestCase):
         sub = self.ms.subset(self.ms.flagship)
         self.assertEqual(len(sub), 4)
         self.assertEqual(sub.X.shape, (4, 10))
+        self.assertEqual(sub.P.shape, (4, 10))
+        self.assertEqual(len(sub.countries), 4)
+
+    def test_derived_indicators_consistent_after_perturbation(self):
+        rng = np.random.default_rng(0)
+        Pp = data.perturb_primitives(self.ms.P, self.ms.countries, rng, 0.1)
+        X = data.build_indicators(Pp)
+        np.testing.assert_allclose(X[:, 1], 100.0 * Pp[:, 0] / Pp[:, 1])
+        np.testing.assert_allclose(X[:, 5], Pp[:, 5] / Pp[:, 4])
+
+    def test_country_level_shocks_are_shared(self):
+        rng = np.random.default_rng(0)
+        Pp = data.perturb_primitives(self.ms.P, self.ms.countries, rng, 0.1)
+        aus = [j for j, c in enumerate(self.ms.countries) if c == "AUS"]
+        F = Pp[aus] / self.ms.P[aus]
+        for col in np.where(data.PRIMITIVE_COUNTRY_LEVEL)[0]:
+            self.assertAlmostEqual(F[:, col].max(), F[:, col].min(), places=12)
 
 
 class TestNormalise(unittest.TestCase):
@@ -97,7 +114,7 @@ class TestRobustness(unittest.TestCase):
 
     def test_data_mc_zero_noise_keeps_baseline(self):
         w = weights.equal()
-        scores, _ = robustness.data_mc(self.cases.X, w, n=10, noise=0.0)
+        scores, _ = robustness.data_mc(self.cases, w, n=10, noise=0.0)
         base = aggregate.additive(self.S, w)
         np.testing.assert_allclose(scores, np.tile(base, (10, 1)), atol=1e-12)
 
@@ -188,37 +205,37 @@ class TestSMAA(unittest.TestCase):
         np.testing.assert_allclose(near_zero, exact, atol=1e-6)
 
     def test_acceptability_is_distribution(self):
-        res = smaa.sample(self.cases.X, n=500, noise=0.10,
-                          upper=data.INDICATOR_UPPER)
+        res = smaa.sample(self.cases, n=500, noise=0.10)
         b = smaa.rank_acceptability(res["ranks"])
         np.testing.assert_allclose(b.sum(axis=0), 1.0, atol=1e-9)
         np.testing.assert_allclose(b.sum(axis=1), 1.0, atol=1e-9)
 
     def test_pairwise_probability_antisymmetric(self):
-        res = smaa.sample(self.cases.X, n=500, noise=0.0)
+        res = smaa.sample(self.cases, n=500, noise=0.0)
         P = smaa.pairwise_probability(res["scores"])
         for i in range(4):
             for j in range(i + 1, 4):
                 self.assertAlmostEqual(P[i, j] + P[j, i], 1.0, places=9)
 
     def test_smaa_regression_rank1_acceptability(self):
-        res = smaa.sample(self.cases.X, n=2000, noise=0.10,
-                          upper=data.INDICATOR_UPPER)
+        res = smaa.sample(self.cases, n=2000, noise=0.10)
         b = smaa.rank_acceptability(res["ranks"])
         np.testing.assert_allclose(
-            b[0], [0.6085, 0.184, 0.1765, 0.031], atol=1e-4)
+            b[0], [0.6145, 0.182, 0.173, 0.0305], atol=1e-4)
 
-    def test_compensability_flip_point(self):
-        rho_grid, _, ranks = smaa.compensability_sweep(
-            self.S, weights.equal())
-        flips = [rho_grid[i] for i in range(1, len(rho_grid))
-                 if not np.array_equal(ranks[i], ranks[i - 1])]
-        self.assertEqual(len(flips), 1)
-        self.assertAlmostEqual(flips[0], 0.7, places=6)
+    def test_compensability_crossover(self):
+        rho = smaa.crossover(self.S, weights.equal(), i=1, j=2)
+        self.assertAlmostEqual(rho, 0.689, places=3)
+
+    def test_crossover_exists_for_all_floors(self):
+        for floor in [0.01, 0.05, 0.10, 0.20]:
+            rho = smaa.crossover(self.S, weights.equal(), i=1, j=2,
+                                 floor=floor)
+            self.assertIsNotNone(rho)
+            self.assertTrue(0.4 < rho < 1.0)
 
     def test_counterfactual_probability_bounds(self):
-        p = counterfactual.rank_probability(self.cases.X, 2, 2, n=300,
-                                            upper=data.INDICATOR_UPPER)
+        p = counterfactual.rank_probability(self.cases, 2, 2, n=300)
         self.assertTrue(0.0 <= p <= 1.0)
 
 

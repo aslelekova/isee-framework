@@ -1,0 +1,4 @@
+scenario,grid_co2_change,rule_of_law_gap_change,baseline_P,achieved_P
+equal cost,-50%,-25%,0.589,0.751
+carbon-expensive,-50%,-25%,0.589,0.751
+governance-expensive,-50%,-25%,0.589,0.751

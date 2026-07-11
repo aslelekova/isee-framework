@@ -1,0 +1,9 @@
+specification,Chile_rank1,Chile_top2,DRC_rank4
+"alpha=0.5, noise 10%",0.496,0.904,0.766
+"alpha=1, noise 10% (baseline)",0.612,0.936,0.842
+"alpha=2, noise 10%",0.726,0.971,0.916
+"alpha=5, noise 10%",0.845,0.990,0.975
+"alpha=1, noise 5%",0.611,0.936,0.846
+"alpha=1, noise 20%",0.614,0.933,0.832
+"alpha=1, rho U(-1,1)",0.619,0.964,0.853
+"alpha=1, rho U(0,2)",0.444,0.882,0.755
