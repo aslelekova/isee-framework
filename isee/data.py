@@ -8,18 +8,23 @@ DIMENSIONS = ["FV", "MF", "SV", "EX", "LL"]
 
 DIM_SIGN = {"FV": +1, "MF": +1, "SV": +1, "EX": -1, "LL": -1}
 
-INDICATORS = {
-    "FV1: Value of mine production (USD bn)":       ("prod_value_usd_bn", "FV", +1),
-    "FV2: Mineral rents (% of GDP)":                ("mineral_rents_pct_gdp", "FV", +1),
-    "MF1: Regulatory quality (percentile)":         ("regulatory_quality_pct", "MF", +1),
-    "MF2: Government effectiveness (percentile)":   ("gov_effectiveness_pct", "MF", +1),
-    "SV1: Share of global mine output (%)":         ("mine_share_pct", "SV", +1),
-    "SV2: Share of global refining (%)":            ("refining_share_pct", "SV", +1),
-    "EX1: Grid carbon intensity (gCO2/kWh)":        ("grid_co2_g_kwh", "EX", +1),
-    "EX2: Water stress (% withdrawal)":             ("water_stress_pct", "EX", +1),
-    "LL1: Rule-of-law gap (100 - percentile)":      ("rule_of_law_pct", "LL", -1),
-    "LL2: Environmental performance gap (100-EPI)": ("epi_score", "LL", -1),
-}
+INDICATOR_NAMES = [
+    "FV1: Value of mine production (USD bn)",
+    "FV2: Focal-mineral production value (% of GDP)",
+    "MF1: Regulatory quality (percentile)",
+    "MF2: Government effectiveness (percentile)",
+    "SV1: Share of global refining (%)",
+    "SV2: Downstream capture ratio (refining/mining share)",
+    "EX1: Grid carbon intensity (gCO2/kWh)",
+    "EX2: Water stress (% withdrawal)",
+    "LL1: Rule-of-law gap (100 - percentile)",
+    "LL2: Environmental performance gap (100 - EPI)",
+]
+
+INDICATOR_DIMS = ["FV", "FV", "MF", "MF", "SV", "SV", "EX", "EX", "LL", "LL"]
+
+INDICATOR_UPPER = np.array([np.inf, 100.0, 100.0, 100.0, 100.0, np.inf,
+                            np.inf, 100.0, 100.0, 100.0])
 
 DEFAULT_CSV = os.path.join(os.path.dirname(__file__), "..", "data",
                            "mineral_systems.csv")
@@ -32,7 +37,7 @@ class MineralSystems:
     minerals: list
     flagship: np.ndarray
     X: np.ndarray
-    indicator_names: list = field(default_factory=lambda: list(INDICATORS))
+    indicator_names: list = field(default_factory=lambda: list(INDICATOR_NAMES))
 
     def __len__(self):
         return len(self.ids)
@@ -57,14 +62,22 @@ def load(path=DEFAULT_CSV):
         labels.append(f"{r['country']} ({r['mineral']})")
         minerals.append(r["mineral"])
         flag.append(r["flagship"] == "1")
-        vals = []
-        for _, (col, _, direction) in INDICATORS.items():
-            v = float(r[col])
-            vals.append(100.0 - v if direction < 0 else v)
-        X.append(vals)
+        g = lambda c: float(r[c])
+        X.append([
+            g("prod_value_usd_bn"),
+            100.0 * g("prod_value_usd_bn") / g("gdp_usd_bn"),
+            g("regulatory_quality_pct"),
+            g("gov_effectiveness_pct"),
+            g("refining_share_pct"),
+            g("refining_share_pct") / g("mine_share_pct"),
+            g("grid_co2_g_kwh"),
+            g("water_stress_pct"),
+            100.0 - g("rule_of_law_pct"),
+            100.0 - g("epi_score"),
+        ])
     return MineralSystems(ids=ids, labels=labels, minerals=minerals,
                           flagship=np.array(flag), X=np.array(X, float))
 
 
 def indicator_dimensions():
-    return [dim for _, (_, dim, _) in INDICATORS.items()]
+    return list(INDICATOR_DIMS)

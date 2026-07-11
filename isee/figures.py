@@ -143,3 +143,47 @@ def typology_dendrogram(Z, systems, clusters, path):
                  "(leaf colour = k-means cluster; * = case-study system)")
     ax.grid(False)
     fig.tight_layout(); fig.savefig(path, bbox_inches="tight"); plt.close(fig)
+
+
+def compensability(rho_grid, scores, labels, path):
+    fig, ax = plt.subplots(figsize=(7.4, 4.4))
+    for j, lbl in enumerate(labels):
+        ax.plot(rho_grid, scores[:, j], color=CASE_COLORS[j], lw=2, label=lbl)
+    ax.axvline(1.0, color="#999999", lw=0.9, ls="--")
+    ax.axvline(0.0, color="#999999", lw=0.9, ls="--")
+    ax.annotate("additive\n(rho = 1)", (1.0, ax.get_ylim()[1]), fontsize=8.5,
+                color="#666666", ha="center", va="top")
+    ax.annotate("geometric\n(rho = 0)", (0.0, ax.get_ylim()[1]), fontsize=8.5,
+                color="#666666", ha="center", va="top")
+    ax.set_xlabel("Compensability parameter rho")
+    ax.set_ylabel("Generalised-mean ISEE score")
+    ax.set_title("ISEE under varying compensability (equal weights)")
+    ax.legend(frameon=False, loc="lower right")
+    fig.tight_layout(); fig.savefig(path, bbox_inches="tight"); plt.close(fig)
+
+
+def acceptability(b, labels, path):
+    fig, ax = plt.subplots(figsize=(7.4, 3.6))
+    y = np.arange(len(labels))
+    rank_colors = ["#0072B2", "#56B4E9", "#E69F00", "#D55E00"]
+    left = np.zeros(len(labels))
+    for r in range(b.shape[0]):
+        vals = b[r]
+        ax.barh(y, vals, 0.55, left=left, color=rank_colors[r],
+                edgecolor="white", linewidth=1.2, label=f"rank {r + 1}")
+        for j in range(len(labels)):
+            if vals[j] >= 0.08:
+                ax.annotate(f"{vals[j]:.0%}", (left[j] + vals[j] / 2, y[j]),
+                            ha="center", va="center", fontsize=8.5,
+                            color="white")
+        left += vals
+    ax.set_yticks(y); ax.set_yticklabels(labels)
+    ax.invert_yaxis()
+    ax.set_xlim(0, 1)
+    ax.set_xlabel("Rank acceptability (share of draws)")
+    ax.set_title("SMAA rank acceptability under joint weight, compensability, "
+                 "and data uncertainty")
+    ax.legend(ncol=4, loc="upper center", bbox_to_anchor=(0.5, -0.22),
+              frameon=False)
+    ax.grid(axis="y", visible=False)
+    fig.tight_layout(); fig.savefig(path, bbox_inches="tight"); plt.close(fig)
