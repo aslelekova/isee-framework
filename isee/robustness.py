@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import rankdata
 
 from . import aggregate, normalise
 from .data import INDICATOR_DIMS, DIMENSIONS, build_indicators, perturb_primitives
@@ -56,7 +57,7 @@ def spearman_matrix(X):
     for i in range(n):
         for j in range(i + 1, n):
             m = ~(np.isnan(X[:, i]) | np.isnan(X[:, j]))
-            a = X[m, i].argsort().argsort().astype(float)
-            b = X[m, j].argsort().argsort().astype(float)
+            a = rankdata(X[m, i], method="average")
+            b = rankdata(X[m, j], method="average")
             C[i, j] = C[j, i] = np.corrcoef(a, b)[0, 1]
     return C

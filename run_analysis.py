@@ -7,8 +7,11 @@ from isee import (aggregate, counterfactual, data, figures, normalise,
                   robustness, smaa, typology, weights)
 
 RES, FIG = "results", "figures"
+import glob
 os.makedirs(RES, exist_ok=True)
 os.makedirs(FIG, exist_ok=True)
+for f in glob.glob(os.path.join(RES, "*.csv")) + glob.glob(os.path.join(FIG, "*.png")):
+    os.remove(f)
 
 
 def save_csv(name, header, rows):
@@ -220,20 +223,27 @@ sil_max = max(m["silhouette"] for m in metrics.values())
 candidates = [k for k, m in metrics.items()
               if m["silhouette"] >= sil_max - 0.02]
 stability = {k: typology.bootstrap_stability(B_all, k) for k in candidates}
+grouped = {k: typology.bootstrap_stability_grouped(B_all, full.countries, k)
+           for k in candidates}
 k_best = max(candidates, key=lambda k: (round(stability[k][0], 3), -k))
 
 save_csv("cluster_selection_metrics.csv",
          ["k", "silhouette", "calinski_harabasz", "bootstrap_ARI_mean",
-          "bootstrap_ARI_sd"],
+          "bootstrap_ARI_sd", "grouped_bootstrap_ARI_mean",
+          "grouped_bootstrap_ARI_sd"],
          [[k, f"{m['silhouette']:.3f}", f"{m['calinski_harabasz']:.1f}",
            f"{stability[k][0]:.3f}" if k in stability else "",
-           f"{stability[k][1]:.3f}" if k in stability else ""]
+           f"{stability[k][1]:.3f}" if k in stability else "",
+           f"{grouped[k][0]:.3f}" if k in grouped else "",
+           f"{grouped[k][1]:.3f}" if k in grouped else ""]
           for k, m in metrics.items()])
 print("  silhouette by k:",
       {k: round(m["silhouette"], 3) for k, m in metrics.items()})
 print("  candidates (within 0.02 of max):", candidates)
 print("  bootstrap ARI:", {k: (round(v[0], 3), round(v[1], 3))
                            for k, v in stability.items()})
+print("  grouped (country) bootstrap ARI:",
+      {k: (round(v[0], 3), round(v[1], 3)) for k, v in grouped.items()})
 print("  selected k =", k_best)
 
 labels_km, centers = typology.kmeans(B_all, k_best)

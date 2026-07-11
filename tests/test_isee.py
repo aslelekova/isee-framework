@@ -239,5 +239,25 @@ class TestSMAA(unittest.TestCase):
         self.assertTrue(0.0 <= p <= 1.0)
 
 
+class TestTieHandling(unittest.TestCase):
+    def test_spearman_matches_scipy_with_ties(self):
+        from scipy.stats import spearmanr
+        ms = data.load()
+        C = robustness.spearman_matrix(ms.X)
+        i, j = 4, 5
+        m = ~(np.isnan(ms.X[:, i]) | np.isnan(ms.X[:, j]))
+        expected = spearmanr(ms.X[m, i], ms.X[m, j]).statistic
+        self.assertAlmostEqual(C[i, j], expected, places=10)
+
+    def test_grouped_bootstrap_bounds(self):
+        ms = data.load()
+        S = normalise.dimension_scores(normalise.minmax(ms.X))
+        B = aggregate.benefit_oriented(S)
+        mean, sd = typology.bootstrap_stability_grouped(
+            B, ms.countries, 6, n_boot=30)
+        self.assertTrue(0.0 <= mean <= 1.0)
+        self.assertTrue(sd >= 0.0)
+
+
 if __name__ == "__main__":
     unittest.main()

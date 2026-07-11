@@ -32,6 +32,25 @@ def bootstrap_stability(B, k, n_boot=200, seed=42):
     return float(np.mean(aris)), float(np.std(aris))
 
 
+def bootstrap_stability_grouped(B, countries, k, n_boot=200, seed=42):
+    rng = np.random.default_rng(seed)
+    ref = KMeans(n_clusters=k, n_init=50, random_state=seed).fit(B)
+    uniq = sorted(set(countries))
+    members = {c: [j for j, cc in enumerate(countries) if cc == c]
+               for c in uniq}
+    aris = []
+    for _ in range(n_boot):
+        picked = rng.choice(uniq, size=len(uniq), replace=True)
+        idx = np.array([j for c in picked for j in members[c]])
+        if len(np.unique(idx)) <= k:
+            continue
+        km = KMeans(n_clusters=k, n_init=10,
+                    random_state=int(rng.integers(1e9))).fit(B[idx])
+        boot_labels = cdist(B, km.cluster_centers_).argmin(axis=1)
+        aris.append(adjusted_rand_score(ref.labels_, boot_labels))
+    return float(np.mean(aris)), float(np.std(aris))
+
+
 def kmeans(B, k, seed=42):
     km = KMeans(n_clusters=k, n_init=50, random_state=seed).fit(B)
     return km.labels_, km.cluster_centers_
