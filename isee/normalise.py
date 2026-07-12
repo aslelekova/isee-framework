@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import rankdata
 
 from .data import DIMENSIONS, indicator_dimensions
 
@@ -20,9 +21,12 @@ def zscore(X, axis=0):
 
 def percentile_rank(X, axis=0):
     X = np.asarray(X, float)
-    order = X.argsort(axis=axis).argsort(axis=axis)
     n = X.shape[axis]
-    return order / (n - 1) if n > 1 else np.zeros_like(X)
+    if n <= 1:
+        return np.zeros_like(X)
+    R = np.apply_along_axis(lambda col: rankdata(col, method="average"),
+                            axis, X)
+    return (R - 1) / (n - 1)
 
 
 def dimension_scores(X_norm):

@@ -18,7 +18,7 @@ and access dates are listed in `DATA_PROVENANCE.csv`.
 | `regulatory_quality_score` | WGI Regulatory Quality anchored score, 2025 revision, obs. 2024 | 0–100 |
 | `gov_effectiveness_score` | WGI Government Effectiveness anchored score, 2025 revision, obs. 2024 | 0–100 |
 | `mine_share_pct` | share of global mine production of the focal mineral, 2025 | % |
-| `refining_share_pct` | share of global refining/processing of the focal mineral, 2024–2025 | % |
+| `refining_share_pct` | share of global refining/processing activity of the focal mineral, 2024–2025; the underlying basis differs by mineral (reported refinery production for copper, refining capacity for nickel, approximate processing shares for lithium and cobalt) | % |
 | `grid_co2_g_kwh` | carbon intensity of electricity generation (Ember), 2024–2025 | gCO2/kWh |
 | `water_stress_pct` | freshwater withdrawal / available resources (SDG 6.4.2), 2022 | % |
 | `rule_of_law_score` | WGI Rule of Law anchored score, 2025 revision, obs. 2024 | 0–100 |

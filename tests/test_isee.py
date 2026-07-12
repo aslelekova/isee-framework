@@ -168,7 +168,7 @@ class TestRegression(unittest.TestCase):
         np.testing.assert_allclose(
             freq[0], [0.6292, 0.2125, 0.1363, 0.0220], atol=1e-4)
 
-    def test_selected_k_is_three(self):
+    def test_selected_k_is_six(self):
         metrics = typology.select_k(self.B_all, k_range=range(2, 11))
         sil_max = max(m["silhouette"] for m in metrics.values())
         candidates = [k for k, m in metrics.items()
