@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from isee import data, normalise
+from isee import aggregate, data, normalise, weights
 
 
 class TestData(unittest.TestCase):
@@ -40,6 +40,42 @@ class TestNormalise(unittest.TestCase):
         S = normalise.dimension_scores(normalise.minmax(ms.X))
         self.assertEqual(S.shape, (len(ms), 5))
         self.assertTrue((S >= 0).all() and (S <= 1).all())
+
+
+class TestWeights(unittest.TestCase):
+    def setUp(self):
+        ms = data.load()
+        S = normalise.dimension_scores(normalise.minmax(ms.X))
+        self.B = aggregate.benefit_oriented(S)
+
+    def test_all_schemes_sum_to_one(self):
+        for w in [weights.equal(), weights.entropy(self.B),
+                  weights.pca(self.B), weights.critic(self.B)]:
+            self.assertAlmostEqual(float(w.sum()), 1.0, places=9)
+            self.assertTrue((w >= 0).all())
+
+    def test_entropy_prefers_discriminating_dimension(self):
+        B = np.column_stack([np.full(10, 0.5), np.linspace(0, 1, 10)])
+        w = weights.entropy(B)
+        self.assertLess(w[0], w[1])
+
+
+class TestAggregate(unittest.TestCase):
+    def test_additive_signs(self):
+        S = np.array([[1.0, 1.0, 1.0, 0.0, 0.0],
+                      [0.0, 0.0, 0.0, 1.0, 1.0]])
+        isee = aggregate.additive(S, weights.equal())
+        self.assertAlmostEqual(isee[0], 0.6)
+        self.assertAlmostEqual(isee[1], -0.4)
+
+    def test_geometric_order_matches_on_dominance(self):
+        S = np.array([[0.9, 0.9, 0.9, 0.1, 0.1],
+                      [0.2, 0.2, 0.2, 0.8, 0.8]])
+        g = aggregate.geometric(S, weights.equal())
+        self.assertGreater(g[0], g[1])
+
+    def test_ranks(self):
+        self.assertEqual(aggregate.ranks([0.3, 0.9, 0.1]).tolist(), [2, 1, 3])
 
 
 if __name__ == "__main__":
