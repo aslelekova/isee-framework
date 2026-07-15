@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from isee import aggregate, data, normalise, weights
+from isee import aggregate, data, normalise, weights, robustness
 
 
 class TestData(unittest.TestCase):
@@ -76,6 +76,29 @@ class TestAggregate(unittest.TestCase):
 
     def test_ranks(self):
         self.assertEqual(aggregate.ranks([0.3, 0.9, 0.1]).tolist(), [2, 1, 3])
+
+
+class TestRobustness(unittest.TestCase):
+    def setUp(self):
+        ms = data.load()
+        self.cases = ms.subset(ms.flagship)
+        self.S = normalise.dimension_scores(normalise.minmax(self.cases.X))
+
+    def test_weight_mc_rank_frequencies_are_distributions(self):
+        _, freq = robustness.weight_mc(self.S, n=500)
+        np.testing.assert_allclose(freq.sum(axis=0), 1.0, atol=1e-9)
+        np.testing.assert_allclose(freq.sum(axis=1), 1.0, atol=1e-9)
+
+    def test_weight_mc_reproducible(self):
+        s1, _ = robustness.weight_mc(self.S, n=200, seed=7)
+        s2, _ = robustness.weight_mc(self.S, n=200, seed=7)
+        np.testing.assert_array_equal(s1, s2)
+
+    def test_data_mc_zero_noise_keeps_baseline(self):
+        w = weights.equal()
+        scores, _ = robustness.data_mc(self.cases.X, w, n=10, noise=0.0)
+        base = aggregate.additive(self.S, w)
+        np.testing.assert_allclose(scores, np.tile(base, (10, 1)), atol=1e-12)
 
 
 if __name__ == "__main__":
