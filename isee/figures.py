@@ -98,3 +98,48 @@ def mc_violin(scores, rank1, labels, path,
     ax.set_ylim(scores.min() - 0.05, scores.max() + 0.16)
     ax.set_title(title)
     fig.tight_layout(); fig.savefig(path, bbox_inches="tight"); plt.close(fig)
+
+
+def typology_scatter(coords, var, clusters, systems, path):
+    fig, ax = plt.subplots(figsize=(7.6, 5.6))
+    for c in sorted(set(clusters)):
+        m = clusters == c
+        ax.scatter(coords[m, 0], coords[m, 1], s=55,
+                   color=CLUSTER_COLORS[c], label=f"Cluster {c + 1}",
+                   edgecolor="white", linewidth=0.8, zorder=3)
+    for j, sid in enumerate(systems.ids):
+        star = systems.flagship[j]
+        ax.annotate(sid, (coords[j, 0], coords[j, 1]),
+                    xytext=(4, 4), textcoords="offset points",
+                    fontsize=8.5 if star else 7.5,
+                    fontweight="bold" if star else "normal",
+                    color="#111111" if star else "#555555")
+    for j in np.where(systems.flagship)[0]:
+        ax.scatter(coords[j, 0], coords[j, 1], s=150, facecolor="none",
+                   edgecolor="#111111", linewidth=1.3, zorder=4)
+    ax.set_xlabel(f"PC1 ({var[0]:.0%} of variance)")
+    ax.set_ylabel(f"PC2 ({var[1]:.0%} of variance)")
+    ax.set_title("Typology of 30 country–mineral systems in the ISEE "
+                 "dimension space\n(k-means clusters; case-study systems "
+                 "circled)")
+    ax.legend(frameon=False, loc="best")
+    fig.tight_layout(); fig.savefig(path, bbox_inches="tight"); plt.close(fig)
+
+
+def typology_dendrogram(Z, systems, clusters, path):
+    fig, ax = plt.subplots(figsize=(7.8, 4.6))
+    labels = [f"{sid}*" if systems.flagship[j] else sid
+              for j, sid in enumerate(systems.ids)]
+    dendrogram(Z, labels=labels, ax=ax, color_threshold=0,
+               above_threshold_color="#666666", leaf_font_size=8)
+    for tick in ax.get_xticklabels():
+        sid = tick.get_text().rstrip("*")
+        j = systems.ids.index(sid)
+        tick.set_color(CLUSTER_COLORS[clusters[j]])
+        if systems.flagship[j]:
+            tick.set_fontweight("bold")
+    ax.set_ylabel("Ward linkage distance")
+    ax.set_title("Hierarchical clustering of the 30 mineral systems "
+                 "(leaf colour = k-means cluster; * = case-study system)")
+    ax.grid(False)
+    fig.tight_layout(); fig.savefig(path, bbox_inches="tight"); plt.close(fig)

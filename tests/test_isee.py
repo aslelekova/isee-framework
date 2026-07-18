@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from isee import aggregate, data, normalise, weights, robustness
+from isee import aggregate, data, normalise, robustness, typology, weights
 
 
 class TestData(unittest.TestCase):
@@ -99,6 +99,26 @@ class TestRobustness(unittest.TestCase):
         scores, _ = robustness.data_mc(self.cases.X, w, n=10, noise=0.0)
         base = aggregate.additive(self.S, w)
         np.testing.assert_allclose(scores, np.tile(base, (10, 1)), atol=1e-12)
+
+
+class TestTypology(unittest.TestCase):
+    def setUp(self):
+        ms = data.load()
+        S = normalise.dimension_scores(normalise.minmax(ms.X))
+        self.B = aggregate.benefit_oriented(S)
+
+    def test_kmeans_label_count(self):
+        labels, centers = typology.kmeans(self.B, 4)
+        self.assertEqual(len(set(labels)), 4)
+        self.assertEqual(centers.shape, (4, 5))
+
+    def test_silhouette_selection_range(self):
+        sil = typology.select_k(self.B, k_range=range(2, 5))
+        self.assertTrue(all(-1 <= v <= 1 for v in sil.values()))
+
+    def test_pca_variance_shares(self):
+        _, var, _ = typology.pca_project(self.B)
+        self.assertTrue(0 < var[0] <= 1 and 0 < var[1] <= var[0])
 
 
 if __name__ == "__main__":
