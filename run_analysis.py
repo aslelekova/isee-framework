@@ -90,10 +90,26 @@ S_all = normalise.dimension_scores(Xn_all)
 B_all = aggregate.benefit_oriented(S_all)
 isee_all = aggregate.additive(S_all, w_eq)
 
-sil = typology.select_k(B_all)
-k_best = max(sil, key=sil.get)
-print("  silhouette by k:", {k: round(v, 3) for k, v in sil.items()},
-      "-> k =", k_best)
+metrics = typology.select_k(B_all, k_range=range(2, 11))
+sil_max = max(m["silhouette"] for m in metrics.values())
+candidates = [k for k, m in metrics.items()
+              if m["silhouette"] >= sil_max - 0.02]
+stability = {k: typology.bootstrap_stability(B_all, k) for k in candidates}
+k_best = max(candidates, key=lambda k: (round(stability[k][0], 3), -k))
+
+save_csv("cluster_selection_metrics.csv",
+         ["k", "silhouette", "calinski_harabasz", "bootstrap_ARI_mean",
+          "bootstrap_ARI_sd"],
+         [[k, f"{m['silhouette']:.3f}", f"{m['calinski_harabasz']:.1f}",
+           f"{stability[k][0]:.3f}" if k in stability else "",
+           f"{stability[k][1]:.3f}" if k in stability else ""]
+          for k, m in metrics.items()])
+print("  silhouette by k:",
+      {k: round(m["silhouette"], 3) for k, m in metrics.items()})
+print("  candidates (within 0.02 of max):", candidates)
+print("  bootstrap ARI:", {k: (round(v[0], 3), round(v[1], 3))
+                           for k, v in stability.items()})
+print("  selected k =", k_best)
 
 labels_km, centers = typology.kmeans(B_all, k_best)
 labels_w, Z, coph = typology.ward(B_all, k_best)

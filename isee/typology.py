@@ -1,16 +1,35 @@
 import numpy as np
 from scipy.cluster.hierarchy import cophenet, fcluster, linkage
-from scipy.spatial.distance import pdist
+from scipy.spatial.distance import cdist, pdist
 from sklearn.cluster import KMeans
-from sklearn.metrics import adjusted_rand_score, silhouette_score
+from sklearn.metrics import (adjusted_rand_score, calinski_harabasz_score,
+                             silhouette_score)
 
 
-def select_k(B, k_range=range(2, 7), seed=42):
+def select_k(B, k_range=range(2, 11), seed=42):
     out = {}
     for k in k_range:
         km = KMeans(n_clusters=k, n_init=50, random_state=seed).fit(B)
-        out[k] = silhouette_score(B, km.labels_)
+        out[k] = {
+            "silhouette": silhouette_score(B, km.labels_),
+            "calinski_harabasz": calinski_harabasz_score(B, km.labels_),
+        }
     return out
+
+
+def bootstrap_stability(B, k, n_boot=200, seed=42):
+    rng = np.random.default_rng(seed)
+    ref = KMeans(n_clusters=k, n_init=50, random_state=seed).fit(B)
+    aris = []
+    for _ in range(n_boot):
+        idx = rng.integers(0, len(B), size=len(B))
+        if len(np.unique(idx)) <= k:
+            continue
+        km = KMeans(n_clusters=k, n_init=10,
+                    random_state=int(rng.integers(1e9))).fit(B[idx])
+        boot_labels = cdist(B, km.cluster_centers_).argmin(axis=1)
+        aris.append(adjusted_rand_score(ref.labels_, boot_labels))
+    return float(np.mean(aris)), float(np.std(aris))
 
 
 def kmeans(B, k, seed=42):

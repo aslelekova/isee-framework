@@ -113,8 +113,9 @@ class TestTypology(unittest.TestCase):
         self.assertEqual(centers.shape, (4, 5))
 
     def test_silhouette_selection_range(self):
-        sil = typology.select_k(self.B, k_range=range(2, 5))
-        self.assertTrue(all(-1 <= v <= 1 for v in sil.values()))
+        metrics = typology.select_k(self.B, k_range=range(2, 5))
+        self.assertTrue(all(-1 <= m["silhouette"] <= 1
+                            for m in metrics.values()))
 
     def test_pca_variance_shares(self):
         _, var, _ = typology.pca_project(self.B)
