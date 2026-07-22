@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this software or dataset, please cite it as below."
+title: "ISEE: Integrated Sustainable Economic Efficiency framework"
+version: 1.0.0
+date-released: 2026-07-11
+repository-code: "https://github.com/aslelekova/isee-framework"
+license: MIT
+authors:
+  - family-names: Lelekova
+    given-names: Anastasia
+  - family-names: Ovsyannikova
+    given-names: Alexandra

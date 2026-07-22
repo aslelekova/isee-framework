@@ -1,0 +1,11 @@
+column,indicator,primary_source,url,vintage,notes
+prod_value_usd_bn,FV1: value of mine production,USGS Mineral Commodity Summaries 2024 (production) x average 2023 world price,https://doi.org/10.3133/mcs2024,2023,"prices: Cu 8490 USD/t; Ni 21500 USD/t; Co 33000 USD/t; Li: LCE 35000 USD/t with Li->LCE factor 5.32; see CODEBOOK.md"
+gdp_usd_bn,denominator of FV2,World Bank WDI NY.GDP.MKTP.CD,https://databank.worldbank.org/source/world-development-indicators,2023,"Cuba: latest available year"
+regulatory_quality_pct,MF1,Worldwide Governance Indicators (percentile rank),https://www.worldbank.org/en/publication/worldwide-governance-indicators,2022,
+gov_effectiveness_pct,MF2,Worldwide Governance Indicators (percentile rank),https://www.worldbank.org/en/publication/worldwide-governance-indicators,2022,
+mine_share_pct,denominator of SV2,USGS Mineral Commodity Summaries 2024,https://doi.org/10.3133/mcs2024,2023,"share of global mine production"
+refining_share_pct,SV1 and numerator of SV2,IEA Global Critical Minerals Outlook 2024,https://www.iea.org/reports/global-critical-minerals-outlook-2024,2023,
+grid_co2_g_kwh,EX1,Ember Global Electricity Review,https://ember-climate.org,2023,
+water_stress_pct,EX2,World Bank WDI ER.H2O.FWST.ZS (SDG 6.4.2),https://databank.worldbank.org/source/world-development-indicators,2021-2022,
+rule_of_law_pct,LL1 = 100 - value,Worldwide Governance Indicators (percentile rank),https://www.worldbank.org/en/publication/worldwide-governance-indicators,2022,
+epi_score,LL2 = 100 - value,Yale Environmental Performance Index,https://epi.yale.edu,2022,
