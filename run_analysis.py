@@ -77,7 +77,7 @@ save_csv("table4_mc_rank_frequencies.csv",
          [[r + 1] + [f"{mc_freq[r, j]:.3f}" for j in range(4)]
           for r in range(4)])
 
-dmc_scores, dmc_freq = robustness.data_mc(cases.X, w_eq, n=5_000, noise=0.10)
+dmc_scores, dmc_freq = robustness.data_mc(cases, w_eq, n=5_000, noise=0.10)
 save_csv("table5_data_noise_rank_frequencies.csv",
          ["rank"] + names,
          [[r + 1] + [f"{dmc_freq[r, j]:.3f}" for j in range(4)]
@@ -108,20 +108,15 @@ print("  data-noise rank-1 frequencies:",
 
 print("== Part 2: compensability and SMAA rank acceptability")
 rho_grid, pm_scores, pm_ranks = smaa.compensability_sweep(S, w_eq)
-flips = [(round(rho_grid[i], 2), pm_ranks[i - 1].tolist(), pm_ranks[i].tolist())
-         for i in range(1, len(rho_grid))
-         if not np.array_equal(pm_ranks[i], pm_ranks[i - 1])]
-print("  rank flips along rho:", flips)
 save_csv("compensability_sweep.csv",
          ["rho"] + [f"score_{n}" for n in names] + [f"rank_{n}" for n in names],
          [[f"{rho_grid[i]:.2f}"] + [f"{pm_scores[i, j]:.4f}" for j in range(4)]
           + [pm_ranks[i, j] for j in range(4)] for i in range(len(rho_grid))])
 
-res = smaa.sample(cases.X, n=20_000, noise=0.10,
-                  upper=data.INDICATOR_UPPER)
+res = smaa.sample(cases, n=20_000, noise=0.10)
 b = smaa.rank_acceptability(res["ranks"])
 P = smaa.pairwise_probability(res["scores"])
-cw = smaa.central_weights(res, rank=1)
+prof = smaa.central_profile(res, rank=1)
 erank = smaa.expected_rank(b)
 entro = smaa.rank_entropy(b)
 
@@ -132,18 +127,30 @@ save_csv("smaa_pairwise.csv",
          ["P(row > col)"] + names,
          [[names[i]] + [f"{P[i, j]:.3f}" if i != j else "—" for j in range(4)]
           for i in range(4)])
-save_csv("smaa_central_weights.csv",
-         ["system"] + data.DIMENSIONS + ["expected_rank", "rank_entropy"],
-         [[names[j]] + [f"{cw[j, i]:.3f}" for i in range(5)]
-          + [f"{erank[j]:.2f}", f"{entro[j]:.3f}"] for j in range(4)])
+save_csv("smaa_central_profiles.csv",
+         ["system", "n_rank1"] + [f"w_{d}_mean" for d in data.DIMENSIONS]
+         + [f"w_{d}_10_90" for d in data.DIMENSIONS]
+         + ["rho_mean", "rho_median", "rho_10_90", "expected_rank",
+            "rank_entropy"],
+         [[names[j], prof[j]["n"]]
+          + [f"{prof[j]['w_mean'][i]:.3f}" for i in range(5)]
+          + [f"[{prof[j]['w_lo'][i]:.2f}, {prof[j]['w_hi'][i]:.2f}]"
+             for i in range(5)]
+          + [f"{prof[j]['rho_mean']:.2f}", f"{prof[j]['rho_median']:.2f}",
+             f"[{prof[j]['rho_lo']:.2f}, {prof[j]['rho_hi']:.2f}]",
+             f"{erank[j]:.2f}", f"{entro[j]:.3f}"]
+          for j in range(4) if prof[j] is not None])
 print("  acceptability rank1:", {names[j]: f"{b[0, j]:.1%}" for j in range(4)})
 print("  expected ranks:", {names[j]: round(erank[j], 2) for j in range(4)})
 print("  P(Chile>Australia) =", f"{P[0, 1]:.3f}",
       " P(Australia>Indonesia) =", f"{P[1, 2]:.3f}",
-      " P(Indonesia>DRC) =", f"{P[2, 3]:.3f}")
-print("  central weights (rank 1):")
+      " P(Indonesia>DRC) =", f"{P[2, 3]:.3f}",
+      " P(Chile>DRC) =", f"{P[0, 3]:.3f}")
 for j in range(4):
-    print(f"    {names[j]}: {np.round(cw[j], 3)}")
+    if prof[j]:
+        print(f"    {names[j]}: w_mean={np.round(prof[j]['w_mean'], 3)} "
+              f"rho_mean={prof[j]['rho_mean']:.2f} "
+              f"rho_10_90=[{prof[j]['rho_lo']:.2f}, {prof[j]['rho_hi']:.2f}]")
 
 figures.compensability(rho_grid, pm_scores, names,
                        os.path.join(FIG, "fig4_compensability.png"))

@@ -23,11 +23,36 @@ INDICATOR_NAMES = [
 
 INDICATOR_DIMS = ["FV", "FV", "MF", "MF", "SV", "SV", "EX", "EX", "LL", "LL"]
 
-INDICATOR_UPPER = np.array([np.inf, 100.0, 100.0, 100.0, 100.0, np.inf,
+PRIMITIVE_NAMES = [
+    "prod_value_usd_bn", "gdp_usd_bn", "regulatory_quality_pct",
+    "gov_effectiveness_pct", "mine_share_pct", "refining_share_pct",
+    "grid_co2_g_kwh", "water_stress_pct", "rule_of_law_pct", "epi_score",
+]
+
+PRIMITIVE_UPPER = np.array([np.inf, np.inf, 100.0, 100.0, 100.0, 100.0,
                             np.inf, 100.0, 100.0, 100.0])
+
+PRIMITIVE_COUNTRY_LEVEL = np.array([False, True, True, True, False, False,
+                                    True, True, True, True])
 
 DEFAULT_CSV = os.path.join(os.path.dirname(__file__), "..", "data",
                            "mineral_systems.csv")
+
+
+def build_indicators(P):
+    pv, gdp, rq, ge, mine, ref, grid, water, rl, epi = np.asarray(P, float).T
+    return np.column_stack([
+        pv,
+        100.0 * pv / gdp,
+        rq,
+        ge,
+        ref,
+        ref / mine,
+        grid,
+        water,
+        100.0 - rl,
+        100.0 - epi,
+    ])
 
 
 @dataclass
@@ -35,7 +60,9 @@ class MineralSystems:
     ids: list
     labels: list
     minerals: list
+    countries: list
     flagship: np.ndarray
+    P: np.ndarray
     X: np.ndarray
     indicator_names: list = field(default_factory=lambda: list(INDICATOR_NAMES))
 
@@ -48,7 +75,9 @@ class MineralSystems:
             ids=[i for i, m in zip(self.ids, mask) if m],
             labels=[l for l, m in zip(self.labels, mask) if m],
             minerals=[c for c, m in zip(self.minerals, mask) if m],
+            countries=[c for c, m in zip(self.countries, mask) if m],
             flagship=self.flagship[mask],
+            P=self.P[mask],
             X=self.X[mask],
         )
 
@@ -56,28 +85,30 @@ class MineralSystems:
 def load(path=DEFAULT_CSV):
     with open(path, newline="", encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
-    ids, labels, minerals, flag, X = [], [], [], [], []
+    ids, labels, minerals, countries, flag, P = [], [], [], [], [], []
     for r in rows:
         ids.append(r["system_id"])
         labels.append(f"{r['country']} ({r['mineral']})")
         minerals.append(r["mineral"])
+        countries.append(r["iso3"])
         flag.append(r["flagship"] == "1")
-        g = lambda c: float(r[c])
-        X.append([
-            g("prod_value_usd_bn"),
-            100.0 * g("prod_value_usd_bn") / g("gdp_usd_bn"),
-            g("regulatory_quality_pct"),
-            g("gov_effectiveness_pct"),
-            g("refining_share_pct"),
-            g("refining_share_pct") / g("mine_share_pct"),
-            g("grid_co2_g_kwh"),
-            g("water_stress_pct"),
-            100.0 - g("rule_of_law_pct"),
-            100.0 - g("epi_score"),
-        ])
+        P.append([float(r[c]) for c in PRIMITIVE_NAMES])
+    P = np.array(P, float)
     return MineralSystems(ids=ids, labels=labels, minerals=minerals,
-                          flagship=np.array(flag), X=np.array(X, float))
+                          countries=countries, flagship=np.array(flag),
+                          P=P, X=build_indicators(P))
 
 
 def indicator_dimensions():
     return list(INDICATOR_DIMS)
+
+
+def perturb_primitives(P, countries, rng, noise):
+    F = rng.uniform(1.0 - noise, 1.0 + noise, size=P.shape)
+    first = {}
+    for j, c in enumerate(countries):
+        if c in first:
+            F[j, PRIMITIVE_COUNTRY_LEVEL] = F[first[c], PRIMITIVE_COUNTRY_LEVEL]
+        else:
+            first[c] = j
+    return np.clip(P * F, 0.0, PRIMITIVE_UPPER)

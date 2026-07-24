@@ -1,7 +1,7 @@
 import numpy as np
 
 from . import aggregate, normalise
-from .data import INDICATOR_DIMS, INDICATOR_UPPER, DIMENSIONS
+from .data import INDICATOR_DIMS, DIMENSIONS, build_indicators, perturb_primitives
 
 
 def weight_mc(S, n=10_000, seed=42):
@@ -11,13 +11,12 @@ def weight_mc(S, n=10_000, seed=42):
     return scores, rank_frequencies(scores)
 
 
-def data_mc(X_raw, w, n=5_000, noise=0.10, seed=42):
+def data_mc(ms, w, n=5_000, noise=0.10, seed=42):
     rng = np.random.default_rng(seed)
-    n_sys = X_raw.shape[0]
-    scores = np.empty((n, n_sys))
+    scores = np.empty((n, len(ms)))
     for i in range(n):
-        Xp = X_raw * rng.uniform(1 - noise, 1 + noise, size=X_raw.shape)
-        Xp = np.clip(Xp, 0.0, INDICATOR_UPPER)
+        Xp = build_indicators(perturb_primitives(ms.P, ms.countries, rng,
+                                                 noise))
         S = normalise.dimension_scores(normalise.minmax(Xp))
         scores[i] = aggregate.additive(S, w)
     return scores, rank_frequencies(scores)
