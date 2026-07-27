@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from isee import (aggregate, data, normalise, robustness,
+from isee import (aggregate, counterfactual, data, normalise, robustness,
                   smaa, typology, weights)
 
 
@@ -222,6 +222,22 @@ class TestSMAA(unittest.TestCase):
         b = smaa.rank_acceptability(res["ranks"])
         np.testing.assert_allclose(
             b[0], [0.6145, 0.182, 0.173, 0.0305], atol=1e-4)
+
+    def test_compensability_crossover(self):
+        rho = smaa.crossover(self.S, weights.equal(), i=1, j=2)
+        self.assertAlmostEqual(rho, 0.689, places=3)
+
+    def test_crossover_exists_for_all_floors(self):
+        for floor in [0.01, 0.05, 0.10, 0.20]:
+            rho = smaa.crossover(self.S, weights.equal(), i=1, j=2,
+                                 floor=floor)
+            self.assertIsNotNone(rho)
+            self.assertTrue(0.4 < rho < 1.0)
+
+    def test_counterfactual_probability_bounds(self):
+        p = counterfactual.rank_probability(self.cases, 2, 2, n=300)
+        self.assertTrue(0.0 <= p <= 1.0)
+
 
 if __name__ == "__main__":
     unittest.main()

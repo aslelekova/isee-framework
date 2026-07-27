@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.optimize import brentq
 
 from . import aggregate, normalise
 from .data import build_indicators, perturb_primitives
@@ -20,6 +21,14 @@ def compensability_sweep(S, w, rho_grid=None, floor=FLOOR):
     scores = np.vstack([power_mean(S, w, r, floor) for r in rho_grid])
     ranks = (-scores).argsort(axis=1).argsort(axis=1) + 1
     return np.asarray(rho_grid), scores, ranks
+
+
+def crossover(S, w, i, j, floor=FLOOR, lo=-2.0, hi=2.0):
+    f = lambda rho: (power_mean(S, w, rho, floor)[i]
+                     - power_mean(S, w, rho, floor)[j])
+    if f(lo) * f(hi) > 0:
+        return None
+    return brentq(f, lo, hi, xtol=1e-6)
 
 
 def sample(ms, n=20_000, alpha=1.0, rho_range=(-2.0, 2.0), noise=0.10,

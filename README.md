@@ -7,7 +7,7 @@ performs uncertainty and sensitivity analysis (alternative weighting schemes,
 weight and input-perturbation Monte Carlo, leave-one-indicator-out),
 analyses compensability through generalised-mean aggregation, computes SMAA
 rank acceptability, pairwise outranking probabilities, and central weights,
-and derives a cluster typology of 30
+runs counterfactual policy analysis, and derives a cluster typology of 30
 country–mineral systems.
 
 ## Structure
@@ -23,11 +23,12 @@ isee_framework/
 │   ├── aggregate.py            # additive and geometric aggregation, ranks
 │   ├── robustness.py           # Monte Carlo, LOIO, correlation analysis
 │   ├── smaa.py                 # generalised-mean aggregation, SMAA rank acceptability
+│   ├── counterfactual.py       # counterfactual policy analysis
 │   ├── typology.py             # k-means, Ward, silhouette, bootstrap stability
 │   └── figures.py              # publication figures
 ├── run_analysis.py             # reproduces all tables and figures of Section 5
 ├── tests/
-│   └── test_isee.py            # unit and regression tests
+│   └── test_isee.py            # 30 unit and regression tests
 ├── CODEBOOK.md                 # indicator definitions and formulas
 ├── DATA_PROVENANCE.csv         # source, URL, and vintage of every column
 └── requirements.txt            # pinned dependency versions
