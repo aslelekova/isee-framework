@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import rankdata
 
 from . import aggregate, normalise
 from .data import INDICATOR_DIMS, DIMENSIONS, build_indicators, perturb_primitives
@@ -39,7 +40,7 @@ def leave_one_indicator_out(X_raw, w):
         Xn = normalise.minmax(X_raw[:, keep])
         kept_dims = dims[keep]
         S = np.column_stack(
-            [Xn[:, kept_dims == d].mean(axis=1) for d in DIMENSIONS])
+            [np.nanmean(Xn[:, kept_dims == d], axis=1) for d in DIMENSIONS])
         sc = aggregate.additive(S, w)
         out.append({
             "dropped": drop,
@@ -51,6 +52,12 @@ def leave_one_indicator_out(X_raw, w):
 
 
 def spearman_matrix(X):
-    R = np.apply_along_axis(
-        lambda col: col.argsort().argsort().astype(float), 0, X)
-    return np.corrcoef(R.T)
+    n = X.shape[1]
+    C = np.eye(n)
+    for i in range(n):
+        for j in range(i + 1, n):
+            m = ~(np.isnan(X[:, i]) | np.isnan(X[:, j]))
+            a = rankdata(X[m, i], method="average")
+            b = rankdata(X[m, j], method="average")
+            C[i, j] = C[j, i] = np.corrcoef(a, b)[0, 1]
+    return C
