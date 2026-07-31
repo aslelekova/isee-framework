@@ -249,5 +249,15 @@ class TestTieHandling(unittest.TestCase):
         expected = spearmanr(ms.X[m, i], ms.X[m, j]).statistic
         self.assertAlmostEqual(C[i, j], expected, places=10)
 
+    def test_grouped_bootstrap_bounds(self):
+        ms = data.load()
+        S = normalise.dimension_scores(normalise.minmax(ms.X))
+        B = aggregate.benefit_oriented(S)
+        mean, sd = typology.bootstrap_stability_grouped(
+            B, ms.countries, 6, n_boot=30)
+        self.assertTrue(0.0 <= mean <= 1.0)
+        self.assertTrue(sd >= 0.0)
+
+
 if __name__ == "__main__":
     unittest.main()
