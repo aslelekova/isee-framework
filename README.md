@@ -1,8 +1,11 @@
 # ISEE: Integrated Sustainable Economic Efficiency framework
 
-Reference implementation and data for the paper *"Beyond Financial Metrics:
-Reframing Economic Efficiency in Critical Mineral Supply Chains under the
-Global Energy Transition"*. The package computes the ISEE composite indicator,
+Research code and data accompanying *"Multidimensional Assessment of Critical
+Mineral Systems: Financial, Institutional, Strategic and Environmental Factors"*.
+The article has been accepted for publication in *Russian Mining Industry*,
+issue 3 (May-June 2027).
+
+The package computes the ISEE composite indicator,
 performs uncertainty and sensitivity analysis (alternative weighting schemes,
 weight and input-perturbation Monte Carlo, leave-one-indicator-out),
 analyses compensability through generalised-mean aggregation, computes SMAA
@@ -13,7 +16,7 @@ country–mineral systems.
 ## Structure
 
 ```
-isee_framework/
+isee-framework/
 ├── data/
 │   └── mineral_systems.csv     # 30 country–mineral systems (see CODEBOOK.md)
 ├── isee/
@@ -28,7 +31,7 @@ isee_framework/
 │   └── figures.py              # publication figures
 ├── run_analysis.py             # reproduces all tables and figures of Section 5
 ├── tests/
-│   └── test_isee.py            # 33 unit and regression tests
+│   └── test_isee.py            # unit and regression tests
 ├── CODEBOOK.md                 # indicator definitions and formulas
 ├── DATA_PROVENANCE.csv         # source, URL, and vintage of every column
 └── requirements.txt            # pinned dependency versions
@@ -56,11 +59,13 @@ require re-running `run_analysis.py`.
 
 All stochastic procedures (Monte Carlo simulations, k-means restarts,
 bootstrap resampling) use fixed random seeds; repeated runs produce identical
-results. The test suite includes regression tests that pin the published
-headline numbers (baseline ISEE scores, entropy weights, Monte Carlo rank
+results. The test suite includes regression tests that pin the reference
+results (baseline ISEE scores, entropy weights, Monte Carlo rank
 frequencies, selected number of clusters). Continuous integration runs the
 tests and the full analysis on every push.
 
 ## License and citation
 
-MIT License (see `LICENSE`). Citation metadata is provided in `CITATION.cff`.
+MIT License (see `LICENSE`). Software citation metadata is provided in
+[`CITATION.cff`](CITATION.cff); the article title and publication status are
+listed above.
