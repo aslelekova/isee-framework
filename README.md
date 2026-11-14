@@ -1,71 +1,37 @@
-# ISEE: Integrated Sustainable Economic Efficiency framework
+# ISEE: Integrated Sustainable Economic Efficiency
 
-Research code and data accompanying *"Multidimensional Assessment of Critical
-Mineral Systems: Financial, Institutional, Strategic and Environmental Factors"*.
-The article has been accepted for publication in *Russian Mining Industry*,
-issue 3 (May-June 2027).
+ISEE is a Python research project for comparing critical mineral systems beyond the value of mine production. It asks which ranking conclusions hold when modeling assumptions change, and which groups emerge from the systems’ full profiles.
 
-The package computes the ISEE composite indicator,
-performs uncertainty and sensitivity analysis (alternative weighting schemes,
-weight and input-perturbation Monte Carlo, leave-one-indicator-out),
-analyses compensability through generalised-mean aggregation, computes SMAA
-rank acceptability, pairwise outranking probabilities, and central weights,
-runs counterfactual policy analysis, and derives a cluster typology of 30
-country–mineral systems.
+The [dataset](data/mineral_systems.csv) covers 30 country–mineral systems in 17 countries across copper, lithium, nickel, and cobalt. Ten indicators describe five dimensions: financial value, managerial and institutional flexibility, strategic value, environmental burden, and exposure to long-term liabilities. The baseline averages min–max normalized indicators within each dimension, then combines the five scores with equal weights, subtracting burden and liability scores. Scores are relative to the comparison set, and several indicators describe national conditions rather than individual mines.
 
-## Structure
+## What the analysis finds
 
-```
-isee-framework/
-├── data/
-│   └── mineral_systems.csv     # 30 country–mineral systems (see CODEBOOK.md)
-├── isee/
-│   ├── data.py                 # dataset loading, indicator construction
-│   ├── normalise.py            # min-max / z-score / percentile normalisation
-│   ├── weights.py              # equal, entropy, PCA, CRITIC weighting
-│   ├── aggregate.py            # additive and geometric aggregation, ranks
-│   ├── robustness.py           # Monte Carlo, LOIO, correlation analysis
-│   ├── smaa.py                 # generalised-mean aggregation, SMAA rank acceptability
-│   ├── counterfactual.py       # counterfactual policy analysis
-│   ├── typology.py             # k-means, Ward, silhouette, bootstrap stability
-│   └── figures.py              # publication figures
-├── run_analysis.py             # reproduces all tables and figures of Section 5
-├── tests/
-│   └── test_isee.py            # unit and regression tests
-├── CODEBOOK.md                 # indicator definitions and formulas
-├── DATA_PROVENANCE.csv         # source, URL, and vintage of every column
-└── requirements.txt            # pinned dependency versions
-```
+**Ranking robustness.** The four case studies are Chilean copper, Australian lithium, Indonesian nickel, and cobalt in the Democratic Republic of the Congo. The [comparison of model specifications](results/table3_specifications.csv) tests equal, entropy, and CRITIC weights, as well as geometric aggregation. Australia and Indonesia swap second and third place under entropy weighting. Separate Monte Carlo experiments vary weights (10,000 draws) or perturb inputs by ±10% (5,000 draws). The baseline order holds in all 5,000 draws of the input-noise experiment.
 
-## Usage
+The joint stochastic multicriteria acceptability analysis (SMAA) varies weights, inputs, and how much a strength in one dimension can offset a weakness in another. In 20,000 scenarios, Chile ranks in the top two in [98.8% of draws](results/smaa_acceptability.csv), while Australia outranks Indonesia in [53.4%](results/smaa_pairwise.csv).
 
-Python ≥ 3.9.
+![SMAA rank distributions for the four case studies: Chile usually ranks first or second, while Australia and Indonesia have similar rank distributions.](figures/fig5_acceptability.png)
+
+**Cluster typology.** The full sample is clustered on the five dimension scores using k-means, with Ward clustering as a comparison. [Six clusters](results/table7_cluster_profiles.csv) are selected for bootstrap stability among solutions with near-maximal silhouette scores. They include institutionally strong extractive systems and refining hubs with high environmental burdens. Resampling whole countries gives a [mean adjusted Rand index](results/cluster_selection_metrics.csv) of 0.780 against the original partition, compared with 0.832 when resampling individual systems.
+
+## Reproduce the analysis
+
+Use Python 3.11, the version used in [CI](.github/workflows/ci.yml).
 
 ```bash
-pip install -r requirements.txt
-python3 run_analysis.py          # writes ./results/*.csv and ./figures/*.png
-python3 -m unittest discover tests -v
+git clone https://github.com/aslelekova/isee-framework.git
+cd isee-framework
+python3.11 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python run_analysis.py
+python -m unittest discover -s tests -v
 ```
 
-## Data
+[`run_analysis.py`](run_analysis.py) rebuilds the CSV tables in [`results/`](results/) and PNG figures in [`figures/`](figures/). The [codebook](CODEBOOK.md) defines the indicators; [data provenance](DATA_PROVENANCE.csv) records their sources and vintages.
 
-Each column of `data/mineral_systems.csv` is documented in `CODEBOOK.md`
-(definition, unit, construction formula) and `DATA_PROVENANCE.csv` (primary
-source, URL, vintage). Indicator values are compiled from the public sources
-listed there; the pipeline is fully data-driven, so revised values only
-require re-running `run_analysis.py`.
+## Paper and citation
 
-## Reproducibility
+Companion code and data for *Multidimensional Assessment of Critical Mineral Systems: Financial, Institutional, Strategic and Environmental Factors*, accepted for publication in *Russian Mining Industry*.
 
-All stochastic procedures (Monte Carlo simulations, k-means restarts,
-bootstrap resampling) use fixed random seeds; repeated runs produce identical
-results. The test suite includes regression tests that pin the reference
-results (baseline ISEE scores, entropy weights, Monte Carlo rank
-frequencies, selected number of clusters). Continuous integration runs the
-tests and the full analysis on every push.
-
-## License and citation
-
-MIT License (see `LICENSE`). Software citation metadata is provided in
-[`CITATION.cff`](CITATION.cff); the article title and publication status are
-listed above.
+See [`CITATION.cff`](CITATION.cff) for the software citation and [`LICENSE`](LICENSE) for the MIT license.
